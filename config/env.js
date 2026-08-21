@@ -56,13 +56,12 @@ const ENV = {
     headless: process.env.BROWSER_HEADLESS === 'true',
     // Convert string to number
     slowMo:   parseInt(process.env.BROWSER_SLOW_MO) || 80,
-    viewport: { width: 1920, height: 1080 }, // Full HD 1080p viewport matching video size
-    args: ['--no-sandbox', '--disable-gpu', '--start-maximized', '--window-size=1920,1080']
+    viewport: null, // null viewport allows Chromium to adapt to the exact laptop screen dimensions in true maximized mode
+    args: ['--no-sandbox', '--disable-gpu', '--start-maximized']
   },
 
   video: {
-    dir: 'reports/videos/',
-    size: { width: 1920, height: 1080 } // Full HD 1080p recording for crystal clear video playback
+    dir: 'reports/videos/'
   },
 
   screenshots: {
