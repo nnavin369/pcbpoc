@@ -433,3 +433,199 @@ Then('I print the API response for {string}', async function (endpointPattern) {
     matchedResponse.json ? 'application/json' : 'text/plain'
   );
 });
+
+/**
+ * Step: Then the API response field {string} from {string} should contain {string}
+ *
+ * Validates that a specific JSON field from a captured response contains the expected string.
+ *
+ * Example:
+ *   And the API response field "Address" from "/DataApi/Info/InfoById/" should contain "110 Main Street"
+ */
+Then('the API response field {string} from {string} should contain {string}', async function (fieldName, endpointPattern, expectedValue) {
+  const responses = this.apiInterceptor ? this.apiInterceptor.getCapturedResponses() : [];
+  const matchedResponse = responses.find(r => r.url.toLowerCase().includes(endpointPattern.toLowerCase()));
+
+  expect(
+    matchedResponse,
+    `Expected an API call matching endpoint "${endpointPattern}" to be captured, but none was found.`
+  ).toBeDefined();
+
+  let actualVal = undefined;
+  if (matchedResponse.json) {
+    actualVal = getNestedProperty(matchedResponse.json, fieldName);
+  }
+
+  // Fallback: search in raw body text if not a parsed JSON key
+  if (actualVal === undefined && matchedResponse.body) {
+    actualVal = matchedResponse.body;
+  }
+
+  expect(
+    actualVal,
+    `Field "${fieldName}" was not found in API response from "${endpointPattern}".`
+  ).toBeDefined();
+
+  const isMatched = String(actualVal).toLowerCase().includes(expectedValue.toLowerCase());
+
+  logger.info(`🔍 Field Check: "${fieldName}" in "${endpointPattern}"`);
+  logger.info(`   Actual Value  : "${actualVal}"`);
+  logger.info(`   Expected Value: contains "${expectedValue}" → ${isMatched ? '✔ MATCH' : '✘ MISMATCH'}`);
+
+  expect(
+    isMatched,
+    `Expected field "${fieldName}" in API response from "${endpointPattern}" to contain "${expectedValue}", but got: "${actualVal}"`
+  ).toBe(true);
+
+  // Attach assertion detail into Allure
+  await this.attach(
+    `Field Verification Passed:\n- Endpoint: ${matchedResponse.url}\n- Field: ${fieldName}\n- Expected (contains): ${expectedValue}\n- Actual: ${actualVal}`,
+    'text/plain'
+  );
+});
+
+/**
+ * Step: Then the API response field {string} from {string} should equal {string}
+ *
+ * Validates that a specific JSON field from a captured response equals the expected string.
+ *
+ * Example:
+ *   And the API response field "City" from "/DataApi/Info/InfoById/" should equal "Waltham"
+ */
+Then('the API response field {string} from {string} should equal {string}', async function (fieldName, endpointPattern, expectedValue) {
+  const responses = this.apiInterceptor ? this.apiInterceptor.getCapturedResponses() : [];
+  const matchedResponse = responses.find(r => r.url.toLowerCase().includes(endpointPattern.toLowerCase()));
+
+  expect(
+    matchedResponse,
+    `Expected an API call matching endpoint "${endpointPattern}" to be captured, but none was found.`
+  ).toBeDefined();
+
+  let actualVal = undefined;
+  if (matchedResponse.json) {
+    actualVal = getNestedProperty(matchedResponse.json, fieldName);
+  }
+
+  expect(
+    actualVal,
+    `Field "${fieldName}" was not found in API response JSON from "${endpointPattern}".`
+  ).toBeDefined();
+
+  const isMatched = String(actualVal).trim().toLowerCase() === expectedValue.trim().toLowerCase();
+
+  logger.info(`🔍 Exact Field Check: "${fieldName}" in "${endpointPattern}"`);
+  logger.info(`   Actual Value  : "${actualVal}"`);
+  logger.info(`   Expected Value: equals "${expectedValue}" → ${isMatched ? '✔ MATCH' : '✘ MISMATCH'}`);
+
+  expect(
+    isMatched,
+    `Expected field "${fieldName}" in API response from "${endpointPattern}" to equal "${expectedValue}", but got: "${actualVal}"`
+  ).toBe(true);
+});
+
+/**
+ * Step: Then the API response from {string} should match the following JSON fields:
+ *
+ * Validates multiple JSON field/value pairs from a data table against a specific endpoint response.
+ *
+ * Example:
+ *   And the API response from "/DataApi/Info/InfoById/" should match the following JSON fields:
+ *     | JSON Field | Expected Value  | Condition |
+ *     | Address    | 110 Main Street | contains  |
+ *     | City       | Waltham         | equals    |
+ *     | State      | MA              | equals    |
+ *     | Status     | Active          | equals    |
+ */
+Then('the API response from {string} should match the following JSON fields:', async function (endpointPattern, dataTable) {
+  const rows = dataTable.hashes();
+  const responses = this.apiInterceptor ? this.apiInterceptor.getCapturedResponses() : [];
+  const matchedResponse = responses.find(r => r.url.toLowerCase().includes(endpointPattern.toLowerCase()));
+
+  expect(
+    matchedResponse,
+    `Expected an API call matching endpoint "${endpointPattern}" to be captured, but none was found.`
+  ).toBeDefined();
+
+  const errors = [];
+  const results = [];
+
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    const fieldName = row['JSON Field'] || row['Field'] || row['Property'] || '';
+    const expectedVal = row['Expected Value'] || row['Value'] || '';
+    const condition = row['Condition'] || 'contains';
+
+    let actualVal = undefined;
+    if (matchedResponse.json) {
+      actualVal = getNestedProperty(matchedResponse.json, fieldName);
+    }
+    if (actualVal === undefined && matchedResponse.body) {
+      actualVal = matchedResponse.body.includes(expectedVal) ? expectedVal : 'NotFound';
+    }
+
+    const isMatch = evaluateCondition(actualVal, expectedVal, condition);
+
+    results.push({
+      index: i + 1,
+      field: fieldName,
+      expected: expectedVal,
+      condition: condition,
+      actual: actualVal !== undefined ? String(actualVal) : 'undefined',
+      passed: isMatch
+    });
+
+    if (!isMatch) {
+      errors.push(`Field "${fieldName}": Expected ${condition} "${expectedVal}", but got "${actualVal}"`);
+    }
+  }
+
+  // Build Allure HTML summary table
+  const htmlRows = results.map(r => {
+    const badge = r.passed
+      ? `<span style="background-color:#28a745; color:#fff; padding:3px 8px; border-radius:4px; font-weight:bold; font-size:11px;">✔ PASS</span>`
+      : `<span style="background-color:#dc3545; color:#fff; padding:3px 8px; border-radius:4px; font-weight:bold; font-size:11px;">✘ FAIL</span>`;
+
+    return `
+      <tr style="background-color:${r.passed ? '#fff' : '#fff5f5'}; border-bottom:1px solid #dee2e6;">
+        <td style="padding:8px; text-align:center; font-weight:bold; border:1px solid #dee2e6;">${r.index}</td>
+        <td style="padding:8px; font-weight:bold; border:1px solid #dee2e6;">${r.field}</td>
+        <td style="padding:8px; border:1px solid #dee2e6;"><code>${r.condition}</code></td>
+        <td style="padding:8px; border:1px solid #dee2e6;"><code>${r.expected}</code></td>
+        <td style="padding:8px; border:1px solid #dee2e6; color:${r.passed ? '#28a745' : '#dc3545'};"><code>${r.actual}</code></td>
+        <td style="padding:8px; text-align:center; border:1px solid #dee2e6;">${badge}</td>
+      </tr>
+    `;
+  }).join('');
+
+  const htmlTable = `
+    <div style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin:15px 0;">
+      <div style="background-color:#343a40; color:#ffffff; padding:10px 14px; border-radius:6px 6px 0 0;">
+        <h4 style="margin:0; font-size:15px;">🔍 Field-Level JSON Validation for ${endpointPattern}</h4>
+      </div>
+      <table style="width:100%; border-collapse:collapse; background-color:#ffffff; border:1px solid #dee2e6; border-radius:0 0 6px 6px; font-size:13px;">
+        <thead>
+          <tr style="background-color:#f8f9fa; color:#495057; text-align:left;">
+            <th style="padding:8px; text-align:center; border:1px solid #dee2e6; width:40px;">#</th>
+            <th style="padding:8px; border:1px solid #dee2e6;">JSON Field</th>
+            <th style="padding:8px; border:1px solid #dee2e6; width:90px;">Condition</th>
+            <th style="padding:8px; border:1px solid #dee2e6;">Expected Value</th>
+            <th style="padding:8px; border:1px solid #dee2e6;">Actual Value</th>
+            <th style="padding:8px; text-align:center; border:1px solid #dee2e6; width:80px;">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${htmlRows}
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  await this.attach(htmlTable, 'text/html');
+
+  if (errors.length > 0) {
+    expect(errors.length, `Field validation failed for "${endpointPattern}":\n- ${errors.join('\n- ')}`).toBe(0);
+  }
+
+  logger.info(`✅ All ${results.length} JSON fields verified for endpoint "${endpointPattern}"`);
+});
+
