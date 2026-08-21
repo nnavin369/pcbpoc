@@ -133,13 +133,23 @@ After(async function (scenario) {
       SessionManager.resetSharedSession();
     }
 
-    // 4. Attach the finalized .webm video recording directly into Allure Report
+    // 4. Video Handling: Attach video to Allure ONLY for failed scenarios; delete on success
     if (video) {
       const videoPath = await video.path().catch(() => null);
       if (videoPath && fs.existsSync(videoPath)) {
-        const videoBuffer = fs.readFileSync(videoPath);
-        await this.attach(videoBuffer, 'video/webm');
-        logger.info(`🎬 Video recording attached to Allure report: ${videoPath}`);
+        if (isFailed) {
+          const videoBuffer = fs.readFileSync(videoPath);
+          await this.attach(videoBuffer, 'video/webm');
+          logger.info(`🎬 Video recording attached to Allure report for FAILED scenario: ${videoPath}`);
+        } else {
+          // Delete temporary video file for passing scenarios to keep report clean & save disk space
+          try {
+            fs.unlinkSync(videoPath);
+            logger.info(`🗑️ Video deleted for PASSED scenario (not attached to report)`);
+          } catch {
+            // Ignore cleanup error
+          }
+        }
       }
     }
   } catch (err) {
