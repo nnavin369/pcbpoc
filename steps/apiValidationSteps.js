@@ -85,12 +85,17 @@ function getNestedProperty(obj, path) {
   for (const part of parts) {
     if (current === null || current === undefined) return undefined;
 
-    // Handle array indexing like items[0]
+    // Handle array indexing like items[0] or Borrowers[0] or borrowers[1]
     const arrayMatch = part.match(/^(\w+)\[(\d+)\]$/);
     if (arrayMatch) {
       const prop = arrayMatch[1];
       const index = parseInt(arrayMatch[2], 10);
-      current = current[prop] ? current[prop][index] : undefined;
+      let targetArray = current[prop];
+      if (!targetArray) {
+        const foundKey = Object.keys(current).find(k => k.toLowerCase() === prop.toLowerCase());
+        targetArray = foundKey ? current[foundKey] : undefined;
+      }
+      current = (Array.isArray(targetArray) && targetArray[index] !== undefined) ? targetArray[index] : undefined;
     } else {
       // Case-insensitive property lookup fallback
       if (current[part] !== undefined) {
