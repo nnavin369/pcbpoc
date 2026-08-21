@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>BDD Framework — QA Onboarding Guide</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #f5f6fa; color: #2d3436; font-size: 14px; }
+  header { background: linear-gradient(135deg, #1a237e, #283593); color: white; padding: 40px; text-align: center; }
+  header h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+  header p { font-size: 14px; opacity: 0.85; }
+  .badge { display: inline-block; background: rgba(255,255,255,0.2); border-radius: 20px; padding: 4px 14px; margin: 4px; font-size: 12px; }
+  .container { max-width: 960px; margin: 32px auto; padding: 0 20px; }
+  h2 { font-size: 18px; color: #1a237e; border-left: 4px solid #1a237e; padding-left: 12px; margin: 32px 0 16px; }
+  h3 { font-size: 14px; color: #283593; margin: 16px 0 8px; font-weight: 600; }
+  p { line-height: 1.7; margin-bottom: 10px; color: #555; }
+  .card { background: white; border-radius: 10px; padding: 20px 24px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
+  .step-card { background: white; border-radius: 10px; padding: 20px 24px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); border-left: 5px solid #1a237e; display: flex; gap: 16px; align-items: flex-start; }
+  .step-num { background: #1a237e; color: white; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+  .step-body { flex: 1; }
+  .step-body h3 { margin-top: 0; }
+  pre { background: #1e1e2e; color: #cdd6f4; border-radius: 8px; padding: 16px; overflow-x: auto; font-size: 12px; line-height: 1.6; margin: 10px 0; }
+  .kw { color: #cba6f7; } .str { color: #a6e3a1; } .cm { color: #6c7086; font-style: italic; } .fn { color: #89b4fa; } .tag { color: #f38ba8; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+  th { background: #1a237e; color: white; padding: 10px 14px; text-align: left; font-size: 13px; }
+  td { padding: 9px 14px; border-bottom: 1px solid #eee; font-size: 13px; }
+  tr:nth-child(even) td { background: #f8f9ff; }
+  .tag-badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; margin: 2px; }
+  .tag-login { background: #dbeafe; color: #1e40af; }
+  .tag-dashboard { background: #dcfce7; color: #166534; }
+  .tag-smoke { background: #fef9c3; color: #854d0e; }
+  .tag-negative { background: #fee2e2; color: #991b1b; }
+  .rule { background: #fff8e1; border-left: 4px solid #f59e0b; border-radius: 6px; padding: 12px 16px; margin: 10px 0; font-size: 13px; color: #78350f; }
+  .tree { background: #1e1e2e; color: #cdd6f4; border-radius: 8px; padding: 16px; font-family: monospace; font-size: 12px; line-height: 1.8; }
+  .tree .dir { color: #89b4fa; } .tree .file { color: #a6e3a1; } .tree .comment { color: #6c7086; }
+  footer { text-align: center; padding: 32px; font-size: 12px; color: #aaa; margin-top: 40px; border-top: 1px solid #eee; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media(max-width:600px){ .grid { grid-template-columns: 1fr; } }
+  .highlight { background: #e8f5e9; border-radius: 6px; padding: 10px 14px; font-size: 13px; color: #2e7d32; margin: 8px 0; }
+  .warn { background: #fff3e0; border-radius: 6px; padding: 10px 14px; font-size: 13px; color: #e65100; margin: 8px 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🏆 Enterprise BDD Automation Framework</h1>
+  <p>QA Onboarding & Developer Reference Guide</p>
+  <br/>
+  <span class="badge">Playwright</span>
+  <span class="badge">Cucumber.js</span>
+  <span class="badge">Allure Reports</span>
+  <span class="badge">Node.js</span>
+  <span class="badge">Page Object Model</span>
+  <br/><br/>
+  <p style="font-size:12px;opacity:0.7">Newrez / Shellpoint Mortgage Servicing — Insight Portal</p>
+</header>
+
+<div class="container">
+
+  <!-- OVERVIEW -->
+  <h2>📌 Overview</h2>
+  <div class="card">
+    <p>This framework is built using <strong>Behavior Driven Development (BDD)</strong> principles with <strong>Playwright</strong> for browser automation and <strong>Cucumber.js</strong> for Gherkin-based test execution. It is designed to be <strong>scalable</strong>, <strong>maintainable</strong>, and <strong>easy to extend</strong> for any new QA engineer joining the team.</p>
+    <div class="grid" style="margin-top:16px">
+      <div>
+        <h3>🎯 Key Goals</h3>
+        <ul style="padding-left:18px;line-height:2;color:#555">
+          <li>Tests written in plain English (Gherkin)</li>
+          <li>Login once — reuse session across tests</li>
+          <li>Auto screenshot on every failure</li>
+          <li>Structured logging on every step</li>
+          <li>Rich Allure HTML reports</li>
+        </ul>
+      </div>
+      <div>
+        <h3>🧱 Tech Stack</h3>
+        <table>
+          <tr><th>Tool</th><th>Purpose</th></tr>
+          <tr><td>Playwright</td><td>Browser automation</td></tr>
+          <tr><td>Cucumber.js v7</td><td>BDD test runner</td></tr>
+          <tr><td>Allure</td><td>Test reporting</td></tr>
+          <tr><td>Node.js 18+</td><td>Runtime</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROJECT STRUCTURE -->
+  <h2>📁 Project Structure</h2>
+  <div class="card">
+    <div class="tree">
+<span class="dir">├── config/</span>
+│   └── <span class="file">env.js</span>              <span class="comment">← URL, credentials, timeouts, browser settings</span>
+<span class="dir">├── features/</span>
+│   ├── <span class="file">login.feature</span>        <span class="comment">← Login scenarios (positive + negative)</span>
+│   └── <span class="file">loanSearch.feature</span>   <span class="comment">← Dashboard loan search scenarios</span>
+<span class="dir">├── pages/</span>
+│   ├── <span class="file">BasePage.js</span>          <span class="comment">← Shared base actions (click, fill, getText...)</span>
+│   ├── <span class="file">LoginPage.js</span>         <span class="comment">← Login page selectors & actions</span>
+│   └── <span class="file">DashboardPage.js</span>     <span class="comment">← Dashboard page selectors & actions</span>
+<span class="dir">├── steps/</span>
+│   ├── <span class="file">loginSteps.js</span>        <span class="comment">← Login step definitions</span>
+│   └── <span class="file">dashboardSteps.js</span>    <span class="comment">← Dashboard step definitions</span>
+<span class="dir">├── support/</span>
+│   ├── <span class="file">world.js</span>             <span class="comment">← Tag-aware session management</span>
+│   ├── <span class="file">hooks.js</span>             <span class="comment">← Before/After hooks + screenshot on failure</span>
+│   └── <span class="file">allureReporter.js</span>    <span class="comment">← Allure formatter integration</span>
+<span class="dir">├── utils/</span>
+│   ├── <span class="file">logger.js</span>            <span class="comment">← Structured timestamped logger</span>
+│   └── <span class="file">sessionManager.js</span>    <span class="comment">← Smart session: login once, reuse or isolate</span>
+└── <span class="file">cucumber.js</span>              <span class="comment">← Cucumber configuration</span>
+    </div>
+  </div>
+
+  <!-- SETUP -->
+  <h2>⚙️ Setup & Installation</h2>
+  <div class="step-card">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <h3>Clone the repository and install dependencies</h3>
+      <pre>git clone &lt;repository-url&gt;
+cd newrez-bdd-playwright
+npm install</pre>
+    </div>
+  </div>
+  <div class="step-card">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <h3>Install Chromium browser</h3>
+      <pre>npx playwright install chromium</pre>
+    </div>
+  </div>
+  <div class="step-card">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <h3>Verify setup with a dry run</h3>
+      <pre>npx cucumber-js --dry-run --publish-quiet</pre>
+      <p>You should see all scenarios listed with <strong>skipped</strong> status — no errors.</p>
+    </div>
+  </div>
+
+  <!-- RUNNING TESTS -->
+  <h2>🚀 Running Tests</h2>
+  <div class="card">
+    <table>
+      <tr><th>Command</th><th>What it runs</th></tr>
+      <tr><td><code>npm test</code></td><td>All tests</td></tr>
+      <tr><td><code>npm run test:login</code></td><td>Login feature only</td></tr>
+      <tr><td><code>npm run test:dashboard</code></td><td>Dashboard feature only</td></tr>
+      <tr><td><code>npm run test:smoke</code></td><td>All @smoke tagged scenarios</td></tr>
+      <tr><td><code>npm run test:negative</code></td><td>All @negative tagged scenarios</td></tr>
+      <tr><td><code>npm run test:report</code></td><td>Run all tests + generate Allure report</td></tr>
+      <tr><td><code>npm run report:open</code></td><td>Open Allure report in browser</td></tr>
+    </table>
+  </div>
+
+  <!-- TAGS -->
+  <h2>🏷️ Tags</h2>
+  <div class="card">
+    <p>Tags control which scenarios run and how the browser session is managed.</p>
+    <table>
+      <tr><th>Tag</th><th>Feature</th><th>Session Type</th><th>Description</th></tr>
+      <tr><td><span class="tag-badge tag-login">@login</span></td><td>login.feature</td><td>Isolated per scenario</td><td>Fresh browser for each test — needed for negative cases</td></tr>
+      <tr><td><span class="tag-badge tag-dashboard">@dashboard</span></td><td>loanSearch.feature</td><td>Shared session</td><td>Login once, reuse across all dashboard scenarios</td></tr>
+      <tr><td><span class="tag-badge tag-smoke">@smoke</span></td><td>Both</td><td>—</td><td>Core happy-path scenarios</td></tr>
+      <tr><td><span class="tag-badge tag-negative">@negative</span></td><td>login.feature</td><td>—</td><td>Error and failure scenarios</td></tr>
+    </table>
+  </div>
+
+  <!-- FRAMEWORK DESIGN -->
+  <h2>🏗️ Framework Design Principles</h2>
+  <div class="grid">
+    <div class="card">
+      <h3>🔐 Smart Session Management</h3>
+      <p><code>@login</code> scenarios get a <strong>fresh isolated browser</strong> per scenario. <code>@dashboard</code> scenarios share a <strong>single logged-in session</strong> — login happens once in <code>BeforeAll</code>.</p>
+    </div>
+    <div class="card">
+      <h3>📋 Single Source of Truth</h3>
+      <p>All config (URL, credentials, timeouts, browser settings) lives in <code>config/env.js</code>. Change one file to update the entire framework.</p>
+    </div>
+    <div class="card">
+      <h3>🧩 Page Object Model</h3>
+      <p>Every page has its own class extending <code>BasePage</code>. Selectors and actions are fully encapsulated — steps never contain selectors.</p>
+    </div>
+    <div class="card">
+      <h3>📸 Auto Screenshot on Failure</h3>
+      <p><code>AfterStep</code> hook automatically captures a full-page screenshot on any failure and attaches it to the Allure report.</p>
+    </div>
+    <div class="card">
+      <h3>📝 Structured Logging</h3>
+      <p>Every action is logged with timestamp, level (INFO / STEP / ERROR), and message — making debugging effortless.</p>
+      <pre><span class="cm">[2026-08-07 18:25:51] ✅ INFO  | Login successful
+[2026-08-07 18:25:52] 🔷 STEP  | Clicking: #login-disable
+[2026-08-07 18:25:53] ❌ ERROR | Step failed — screenshot captured</span></pre>
+    </div>
+    <div class="card">
+      <h3>🔌 Zero Core Changes</h3>
+      <p>Adding a new feature <strong>never</strong> requires changes to <code>BasePage</code>, <code>hooks</code>, <code>sessionManager</code>, <code>logger</code>, or <code>env</code>. Only <code>world.js</code> and <code>cucumber.js</code> need 1 line each.</p>
+    </div>
+  </div>
+
+  <!-- ADDING NEW FEATURE -->
+  <h2>➕ How to Add a New Feature</h2>
+  <p style="margin-bottom:16px">Follow these <strong>5 steps</strong> every time you add a new feature. Example: adding a <em>Loan Details</em> feature.</p>
+
+  <div class="step-card">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <h3>Create <code>features/loanDetails.feature</code></h3>
+      <p>Write Gherkin scenarios using a new tag <code>@loanDetails</code></p>
+      <pre><span class="tag">@loanDetails</span>
+<span class="kw">Feature:</span> Loan Details
+  As a logged-in user
+  I want to view loan details
+  So that I can verify loan information
+
+  <span class="tag">@smoke</span>
+  <span class="kw">Scenario:</span> View loan details page
+    <span class="kw">Given</span> I am on the dashboard
+    <span class="kw">When</span> I navigate to loan details for <span class="str">"1234567"</span>
+    <span class="kw">Then</span> I should see the loan details page</pre>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <h3>Create <code>pages/LoanDetailsPage.js</code></h3>
+      <p>Define selectors and page actions — always extend <code>BasePage</code></p>
+      <pre><span class="kw">'use strict'</span>;
+
+<span class="kw">const</span> BasePage = <span class="fn">require</span>(<span class="str">'./BasePage'</span>);
+
+<span class="kw">const</span> SELECTORS = {
+  loanNumber: <span class="str">'.loan-number'</span>,
+  loanStatus: <span class="str">'.loan-status'</span>
+};
+
+<span class="kw">class</span> <span class="fn">LoanDetailsPage</span> <span class="kw">extends</span> BasePage {
+  <span class="kw">async</span> <span class="fn">getLoanNumber</span>() {
+    <span class="kw">return</span> <span class="kw">this</span>.<span class="fn">getText</span>(SELECTORS.loanNumber);
+  }
+}
+
+module.exports = LoanDetailsPage;</pre>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <h3>Create <code>steps/loanDetailsSteps.js</code></h3>
+      <p>Map each Gherkin step to a page action</p>
+      <pre><span class="kw">'use strict'</span>;
+
+<span class="kw">const</span> { When, Then } = <span class="fn">require</span>(<span class="str">'@cucumber/cucumber'</span>);
+<span class="kw">const</span> { expect } = <span class="fn">require</span>(<span class="str">'@playwright/test'</span>);
+
+<span class="fn">When</span>(<span class="str">'I navigate to loan details for {string}'</span>, <span class="kw">async function</span> (loanId) {
+  <span class="kw">await</span> <span class="kw">this</span>.loanDetailsPage.<span class="fn">navigate</span>(<span class="str">`/Loan/Details/<span class="kw">${</span>loanId<span class="kw">}</span>`</span>);
+});
+
+<span class="fn">Then</span>(<span class="str">'I should see the loan details page'</span>, <span class="kw">async function</span> () {
+  <span class="kw">const</span> num = <span class="kw">await</span> <span class="kw">this</span>.loanDetailsPage.<span class="fn">getLoanNumber</span>();
+  <span class="fn">expect</span>(num).<span class="fn">toBeTruthy</span>();
+});</pre>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-num">4</div>
+    <div class="step-body">
+      <h3>Register in <code>support/world.js</code> — 2 lines only</h3>
+      <pre><span class="cm">// 1. Add import at the top</span>
+<span class="kw">const</span> LoanDetailsPage = <span class="fn">require</span>(<span class="str">'../pages/LoanDetailsPage'</span>);
+
+<span class="cm">// 2. Add inside init() method</span>
+<span class="kw">this</span>.loanDetailsPage = <span class="kw">new</span> <span class="fn">LoanDetailsPage</span>(<span class="kw">this</span>.page);</pre>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-num">5</div>
+    <div class="step-body">
+      <h3>Register in <code>cucumber.js</code> — 1 line only</h3>
+      <pre><span class="str">'--require steps/loanDetailsSteps.js'</span>,  <span class="cm">// ← ADD THIS</span></pre>
+    </div>
+  </div>
+
+  <div class="highlight">✅ That's it! Run <code>npm test</code> — your new feature is live. Zero changes to core framework files.</div>
+
+  <!-- RULES -->
+  <h2>📏 Golden Rules for QA Engineers</h2>
+  <div class="card">
+    <div class="rule">🚫 <strong>Never put selectors in step definitions.</strong> All selectors belong in Page Objects only.</div>
+    <div class="rule">🚫 <strong>Never hardcode credentials in steps or features.</strong> Always use <code>config/env.js</code>.</div>
+    <div class="rule">🚫 <strong>Never modify BasePage, hooks, sessionManager, logger, or env</strong> when adding a new feature.</div>
+    <div class="rule">✅ <strong>Always extend BasePage</strong> for every new page object.</div>
+    <div class="rule">✅ <strong>Always add a feature-level tag</strong> (e.g. <code>@loanDetails</code>) to every new feature file.</div>
+    <div class="rule">✅ <strong>Use <code>@dashboard</code> tag</strong> for any feature that needs a logged-in session to avoid repeated logins.</div>
+  </div>
+
+  <!-- SUMMARY TABLE -->
+  <h2>📋 Quick Reference Summary</h2>
+  <div class="card">
+    <table>
+      <tr><th>File</th><th>Purpose</th><th>Touch when adding feature?</th></tr>
+      <tr><td><code>config/env.js</code></td><td>All environment config</td><td>❌ No</td></tr>
+      <tr><td><code>utils/logger.js</code></td><td>Logging utility</td><td>❌ No</td></tr>
+      <tr><td><code>utils/sessionManager.js</code></td><td>Browser session management</td><td>❌ No</td></tr>
+      <tr><td><code>pages/BasePage.js</code></td><td>Base page actions</td><td>❌ No</td></tr>
+      <tr><td><code>support/hooks.js</code></td><td>Before/After hooks</td><td>❌ No</td></tr>
+      <tr><td><code>support/allureReporter.js</code></td><td>Allure integration</td><td>❌ No</td></tr>
+      <tr><td><code>support/world.js</code></td><td>Page object wiring</td><td>✅ 2 lines</td></tr>
+      <tr><td><code>cucumber.js</code></td><td>Cucumber config</td><td>✅ 1 line</td></tr>
+      <tr><td><code>features/*.feature</code></td><td>Gherkin scenarios</td><td>✅ Create new file</td></tr>
+      <tr><td><code>pages/*Page.js</code></td><td>Page objects</td><td>✅ Create new file</td></tr>
+      <tr><td><code>steps/*Steps.js</code></td><td>Step definitions</td><td>✅ Create new file</td></tr>
+    </table>
+  </div>
+
+</div>
+
+<footer>
+  <p>Newrez / Shellpoint Mortgage Servicing — QA Automation Team</p>
+  <p style="margin-top:6px">Enterprise BDD Framework • Playwright + Cucumber.js + Allure</p>
+</footer>
+
+</body>
+</html>

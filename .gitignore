@@ -1,0 +1,29 @@
+# =============================================================================
+# .gitignore — Files to EXCLUDE from Git
+#
+# Any file listed here will NOT be pushed to the repository.
+# This protects sensitive credentials and keeps the repo clean.
+# =============================================================================
+
+# ── Credentials & Environment Variables ──────────────────────────────────────
+# .env contains real passwords — NEVER commit this file
+.env
+
+# ── Node.js Dependencies ──────────────────────────────────────────────────────
+# node_modules is huge (~200MB) — always reinstall with: npm install
+node_modules/
+
+# ── Test Reports & Results ────────────────────────────────────────────────────
+allure-results/
+allure-report/
+reports/
+*.log
+
+# ── Playwright Artifacts ──────────────────────────────────────────────────────
+test-results/
+playwright-report/
+
+# ── OS & Editor Files ─────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/

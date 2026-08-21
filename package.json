@@ -1,0 +1,61 @@
+{
+  "name": "newrez-bdd-playwright",
+  "version": "1.0.0",
+  "description": "Enterprise BDD Automation Framework — Playwright + Cucumber + Allure",
+  "_comments": {
+    "about": "This file defines the project and all the commands you can run from the terminal.",
+    "how_to_run": "Open terminal in this folder and type: npm run <script-name>",
+    "scripts_explained": {
+      "test": "Runs ALL tests sequentially (one at a time)",
+      "test:parallel": "Runs ALL tests in parallel (3 workers simultaneously)",
+      "test:parallel:loansearch": "Runs loan search tests in parallel",
+      "test:parallel:login": "Runs login tests in parallel",
+      "test:login": "Runs ONLY the login scenarios (@login tag)",
+      "test:dashboard": "Runs ONLY the dashboard/loan search scenarios (@dashboard tag)",
+      "test:smoke": "Runs ONLY the smoke tests — quick sanity check (@smoke tag)",
+      "test:negative": "Runs ONLY the negative tests — invalid/empty credentials (@negative tag)",
+      "test:loanid": "Runs ONLY the Loan ID search scenario (@loanid tag)",
+      "test:name": "Runs ONLY the Name search scenario (@name tag)",
+      "test:loansearch": "Runs ALL loan search scenarios end-to-end (@dashboard tag)",
+      "report:generate": "Builds the HTML Allure report from allure-results/ folder",
+      "report:open": "Opens the generated Allure report in your browser",
+      "test:report": "Clears old results + runs all tests + generates the Allure report (all in one)",
+      "test:report:parallel": "Same as test:report but runs tests in parallel"
+    },
+    "dependencies_explained": {
+      "@cucumber/cucumber": "The BDD test runner — reads .feature files and runs step definitions",
+      "@playwright/test": "Provides the expect() assertion library",
+      "playwright": "The browser automation engine — controls Chrome/Firefox/Safari",
+      "allure-cucumberjs": "Connects Cucumber test results to the Allure report format",
+      "allure-commandline": "The CLI tool used to generate and open the Allure HTML report",
+      "cucumber-html-reporter": "Alternative HTML reporter (available but not currently used)"
+    }
+  },
+  "scripts": {
+    "test": "cucumber-js --profile default",
+    "test:parallel": "cucumber-js --profile parallel",
+    "test:parallel:loansearch": "cucumber-js --profile parallel --tags @dashboard",
+    "test:parallel:login": "cucumber-js --profile parallel --tags @login",
+    "test:login": "cucumber-js --profile default --tags @login",
+    "test:dashboard": "cucumber-js --profile default --tags @dashboard",
+    "test:smoke": "cucumber-js --profile default --tags @smoke",
+    "test:negative": "cucumber-js --profile default --tags @negative",
+    "test:loanid": "cucumber-js --profile default --tags @loanid",
+    "test:name": "cucumber-js --profile default --tags @name",
+    "test:loansearch": "cucumber-js --profile default --tags @dashboard",
+    "test:loantabs": "cucumber-js --profile default --tags @loanTabs",
+    "report:generate": "allure generate allure-results --clean -o allure-report",
+    "report:open": "allure open allure-report",
+    "test:report": "if exist allure-results rmdir /s /q allure-results & mkdir allure-results & cucumber-js --profile default & npm run report:generate",
+    "test:report:parallel": "if exist allure-results rmdir /s /q allure-results & mkdir allure-results & cucumber-js --profile parallel & npm run report:generate"
+  },
+  "devDependencies": {
+    "@cucumber/cucumber": "7.3.2",
+    "@playwright/test": "1.40.0",
+    "allure-commandline": "^2.27.0",
+    "allure-cucumberjs": "^2.15.1",
+    "cucumber-html-reporter": "^7.2.0",
+    "dotenv": "^17.4.2",
+    "playwright": "1.40.0"
+  }
+}
