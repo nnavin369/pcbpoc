@@ -261,51 +261,107 @@ class LoanDetailsPage extends BasePage {
    * HELPER FUNCTION: _clickMoreDropdownTab(tabName) [Private]
    * --------------------------------------------------------------------------
    * WHAT IT DOES:
-   *   Clicks a tab located inside the "More" dropdown menu (Tabs 11 to 14).
+   *   Clicks a tab located inside the "More" dropdown menu (Tabs 11 to 14):
+   *   - Taxes and Insurance
+   *   - Flood Occupancy
+   *   - Payoff Quote
+   *   - Cut off Dates
    *
    * HOW IT WORKS:
-   *   1. Clicks the "More" button to open the dropdown menu.
-   *   2. Waits 800ms for the animation to open the menu.
-   *   3. Finds the item matching `tabName` inside the menu and clicks it.
+   *   1. Clicks the "More" dropdown button to open the menu.
+   *   2. Finds the exact matching menu item inside `.dropdown-menu`.
+   *   3. Hovers on the menu item to trigger native visual hover highlight.
+   *   4. Clicks the item to activate the respective tab panel.
    *
    * @private
-   * @param {string} tabName - Example: "Taxes and Insurance", "Cut off Dates"
+   * @param {string} tabName - Tab name to click
    */
   async _clickMoreDropdownTab(tabName) {
-    logger.info(`Tab "${tabName}" is under the "More" dropdown — clicking "More" first`);
+    logger.info(`Tab "${tabName}" is under the "More" dropdown — opening "More" menu`);
+
+    const cleanName = tabName.trim().toLowerCase();
 
     // Step 1: Open the "More" dropdown menu
-    const moreBtn = this.page.locator('a:has-text("More"), .dropdown-toggle:has-text("More")').first();
+    const moreBtn = this.page.locator('a:has-text("More"), .dropdown-toggle:has-text("More"), li:has-text("More")').first();
     await moreBtn.waitFor({ state: 'visible', timeout: 10000 });
-    await moreBtn.click();
-    logger.info('"More" dropdown clicked, waiting for menu to appear...');
-    await this.page.waitForTimeout(800);
+    
+    // Check if dropdown is already open; if not, click it
+    const isMenuOpen = await this.page.locator('.dropdown-menu.show, .dropdown-menu:visible').isVisible().catch(() => false);
+    if (!isMenuOpen) {
+      await moreBtn.click();
+      logger.info('"More" dropdown clicked — menu expanded');
+      await this.page.waitForTimeout(600);
+    }
 
-    // Step 2: Search for the item inside the opened dropdown menu
-    const firstWord = tabName.split(' ')[0];
-    const dropdownStrategies = [
-      this.page.locator(`.dropdown-menu a:has-text("${tabName}")`).first(),
-      this.page.locator(`.dropdown-menu a:has-text("${firstWord}")`).first(),
-      this.page.locator(`.dropdown-menu li:has-text("${firstWord}")`).first(),
-      this.page.locator(`a:has-text("${tabName}")`).first(),
-      this.page.locator(`a:has-text("${firstWord}")`).first(),
-    ];
+    // Step 2: Define specific, exact locators for each submenu item
+    let menuSelectors = [];
 
-    for (const locator of dropdownStrategies) {
+    if (cleanName.includes('tax') || cleanName.includes('insurance')) {
+      menuSelectors = [
+        this.page.locator('.dropdown-menu a:has-text("Taxes")').first(),
+        this.page.locator('.dropdown-menu a:has-text("Tax")').first(),
+        this.page.locator('.dropdown-menu a:has-text("Insurance")').first(),
+        this.page.locator('.dropdown-menu li:has-text("Tax")').first(),
+      ];
+    } else if (cleanName.includes('flood') || cleanName.includes('occupancy')) {
+      menuSelectors = [
+        this.page.locator('.dropdown-menu a:has-text("Flood")').first(),
+        this.page.locator('.dropdown-menu a:has-text("Occupancy")').first(),
+        this.page.locator('.dropdown-menu li:has-text("Flood")').first(),
+      ];
+    } else if (cleanName.includes('payoff') || cleanName.includes('quote')) {
+      menuSelectors = [
+        this.page.locator('.dropdown-menu a:has-text("Payoff")').first(),
+        this.page.locator('.dropdown-menu a:has-text("Quote")').first(),
+        this.page.locator('.dropdown-menu li:has-text("Payoff")').first(),
+      ];
+    } else if (cleanName.includes('cut') || cleanName.includes('cutoff') || cleanName.includes('dates')) {
+      menuSelectors = [
+        this.page.locator('.dropdown-menu a:has-text("Cut")').first(),
+        this.page.locator('.dropdown-menu a:has-text("Cutoff")').first(),
+        this.page.locator('.dropdown-menu a:has-text("Dates")').first(),
+        this.page.locator('.dropdown-menu li:has-text("Cut")').first(),
+      ];
+    } else {
+      menuSelectors = [
+        this.page.locator(`.dropdown-menu a:has-text("${tabName}")`).first(),
+        this.page.locator(`.dropdown-menu li:has-text("${tabName}")`).first(),
+      ];
+    }
+
+    // Step 3: Find, hover (to visually highlight), and click the menu item
+    let clicked = false;
+    for (const locator of menuSelectors) {
       try {
         if (await locator.isVisible({ timeout: 2000 })) {
+          // Hover on the menu item so it is visibly highlighted on screen and in video
+          await locator.hover();
+          await this.page.waitForTimeout(400);
+
+          // Apply visual highlight border/background for clarity
+          await locator.evaluate((el) => {
+            el.style.outline = '2px solid #007bff';
+            el.style.backgroundColor = '#e8f0fe';
+          }).catch(() => {});
+
           await locator.click();
-          logger.info(`Clicked "${tabName}" inside "More" dropdown`);
-          return;
+          logger.info(`✔ Clicked and activated "${tabName}" inside "More" dropdown`);
+          clicked = true;
+          break;
         }
       } catch {
-        // Try next strategy
+        // Try next selector
       }
     }
 
-    // Fallback: force-click by text
-    logger.warn(`"More" dropdown item "${tabName}" not found with standard locators, using force-click`);
-    await this.page.locator(`text="${tabName}"`).first().click({ force: true });
+    if (!clicked) {
+      logger.warn(`Specific dropdown locator for "${tabName}" not found — attempting scoped text match`);
+      const fallbackItem = this.page.locator(`.dropdown-menu :has-text("${tabName.split(' ')[0]}")`).first();
+      await fallbackItem.hover().catch(() => {});
+      await fallbackItem.click({ force: true });
+    }
+
+    await this.page.waitForTimeout(500);
   }
 
   /**
