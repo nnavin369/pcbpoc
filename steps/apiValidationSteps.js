@@ -301,3 +301,135 @@ Then('the API response payload should match the expected fields:', async functio
     expect(errors.length, `API Payload validation failed:\n- ${errors.join('\n- ')}`).toBe(0);
   }
 });
+
+/**
+ * Step: Then the API response from {string} should contain {string}
+ *
+ * Finds the captured response matching the endpoint, verifies it contains the specified text,
+ * and PRINTS the full response payload to the console and Allure Report.
+ *
+ * Example:
+ *   Then the API response from "/DataApi/Info/InfoById/" should contain "555835905"
+ */
+Then('the API response from {string} should contain {string}', async function (endpointPattern, expectedContent) {
+  const responses = this.apiInterceptor ? this.apiInterceptor.getCapturedResponses() : [];
+  const matchedResponse = responses.find(r => r.url.toLowerCase().includes(endpointPattern.toLowerCase()));
+
+  expect(
+    matchedResponse,
+    `Expected an API call matching endpoint "${endpointPattern}" to be captured, but none was found.`
+  ).toBeDefined();
+
+  // Format the body for display and assertions
+  const rawBody = matchedResponse.body || '';
+  const prettyBody = matchedResponse.json
+    ? JSON.stringify(matchedResponse.json, null, 2)
+    : rawBody;
+
+  // 1. PRINT TO CONSOLE
+  logger.info(`\n================================================================================`);
+  logger.info(`📡 API RESPONSE CAPTURED FOR: ${matchedResponse.method} ${matchedResponse.status} → ${matchedResponse.url}`);
+  logger.info(`--------------------------------------------------------------------------------`);
+  logger.info(prettyBody.substring(0, 3000));
+  if (prettyBody.length > 3000) {
+    logger.info(`\n... [Truncated remaining ${prettyBody.length - 3000} characters]`);
+  }
+  logger.info(`================================================================================\n`);
+
+  // 2. ATTACH TO ALLURE REPORT
+  await this.attach(
+    `Endpoint: ${matchedResponse.method} ${matchedResponse.status} → ${matchedResponse.url}\n\nResponse Body:\n${prettyBody}`,
+    matchedResponse.json ? 'application/json' : 'text/plain'
+  );
+
+  // 3. ASSERTION
+  const containsContent = rawBody.toLowerCase().includes(expectedContent.toLowerCase()) ||
+                          JSON.stringify(matchedResponse.json || '').toLowerCase().includes(expectedContent.toLowerCase());
+
+  expect(
+    containsContent,
+    `Expected API response from "${endpointPattern}" to contain "${expectedContent}", but it was not found.\nCaptured Response Snippet:\n${rawBody.substring(0, 500)}`
+  ).toBe(true);
+
+  logger.info(`✅ API response from "${endpointPattern}" successfully contains expected content: "${expectedContent}"`);
+});
+
+/**
+ * Step: Then the API response from {string} should contain the following content:
+ *
+ * Verifies multiple content strings against the captured API response body,
+ * and prints the response payload to console and Allure.
+ *
+ * Example:
+ *   Then the API response from "/DataApi/Info/InfoById/" should contain the following content:
+ *     | Expected Content |
+ *     | 555835905        |
+ */
+Then('the API response from {string} should contain the following content:', async function (endpointPattern, dataTable) {
+  const expectedItems = dataTable.hashes().map(row => row['Expected Content'] || row['Content'] || Object.values(row)[0]);
+  const responses = this.apiInterceptor ? this.apiInterceptor.getCapturedResponses() : [];
+  const matchedResponse = responses.find(r => r.url.toLowerCase().includes(endpointPattern.toLowerCase()));
+
+  expect(
+    matchedResponse,
+    `Expected an API call matching endpoint "${endpointPattern}" to be captured, but none was found.`
+  ).toBeDefined();
+
+  const rawBody = matchedResponse.body || '';
+  const prettyBody = matchedResponse.json
+    ? JSON.stringify(matchedResponse.json, null, 2)
+    : rawBody;
+
+  // 1. PRINT TO CONSOLE
+  logger.info(`\n================================================================================`);
+  logger.info(`📡 API RESPONSE FOR: ${matchedResponse.method} ${matchedResponse.status} → ${matchedResponse.url}`);
+  logger.info(`--------------------------------------------------------------------------------`);
+  logger.info(prettyBody.substring(0, 3000));
+  logger.info(`================================================================================\n`);
+
+  // 2. ATTACH TO ALLURE REPORT
+  await this.attach(
+    `Endpoint: ${matchedResponse.method} ${matchedResponse.status} → ${matchedResponse.url}\n\nResponse Body:\n${prettyBody}`,
+    matchedResponse.json ? 'application/json' : 'text/plain'
+  );
+
+  // 3. ASSERT ALL ITEMS
+  const missingItems = [];
+  for (const item of expectedItems) {
+    const isFound = rawBody.toLowerCase().includes(item.toLowerCase()) ||
+                    JSON.stringify(matchedResponse.json || '').toLowerCase().includes(item.toLowerCase());
+    if (!isFound) {
+      missingItems.push(item);
+    }
+  }
+
+  expect(
+    missingItems.length,
+    `API response from "${endpointPattern}" is missing ${missingItems.length} expected item(s):\n- ${missingItems.join('\n- ')}`
+  ).toBe(0);
+
+  logger.info(`✅ All ${expectedItems.length} expected content item(s) verified in API response from "${endpointPattern}"`);
+});
+
+/**
+ * Step: Then I print the API response for {string}
+ *
+ * Prints and attaches the API response for any captured endpoint.
+ */
+Then('I print the API response for {string}', async function (endpointPattern) {
+  const responses = this.apiInterceptor ? this.apiInterceptor.getCapturedResponses() : [];
+  const matchedResponse = responses.find(r => r.url.toLowerCase().includes(endpointPattern.toLowerCase()));
+
+  expect(matchedResponse, `No API call matching endpoint "${endpointPattern}" was captured.`).toBeDefined();
+
+  const prettyBody = matchedResponse.json
+    ? JSON.stringify(matchedResponse.json, null, 2)
+    : (matchedResponse.body || '<Empty Response Body>');
+
+  logger.info(`\n=== API RESPONSE: ${matchedResponse.method} ${matchedResponse.status} → ${matchedResponse.url} ===\n${prettyBody}\n========================================================\n`);
+
+  await this.attach(
+    `API Response for ${matchedResponse.url} (${matchedResponse.status}):\n\n${prettyBody}`,
+    matchedResponse.json ? 'application/json' : 'text/plain'
+  );
+});
