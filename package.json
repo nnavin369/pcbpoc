@@ -44,6 +44,7 @@
     "test:name": "cucumber-js --profile default --tags @name",
     "test:loansearch": "cucumber-js --profile default --tags @dashboard",
     "test:loantabs": "cucumber-js --profile default --tags @loanTabs",
+    "test:api": "cucumber-js --profile default --tags @loanSearchApi",
     "report:generate": "allure generate allure-results --clean -o allure-report",
     "report:open": "allure open allure-report",
     "test:report": "if exist allure-results rmdir /s /q allure-results & mkdir allure-results & cucumber-js --profile default & npm run report:generate",

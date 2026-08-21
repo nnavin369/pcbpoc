@@ -34,6 +34,7 @@ const commonOptions = [
   '--require steps/loginSteps.js',     // load login step definitions
   '--require steps/dashboardSteps.js', // load loan search step definitions
   '--require steps/loanDetailsSteps.js', // load multi-tab loan details step definitions
+  '--require steps/apiValidationSteps.js', // load API validation step definitions
   '--format progress',                 // show progress dots in terminal
   '--format ./support/allureReporter.js', // generate allure report data
   '--publish-quiet'                    // suppress cucumber.io publish message

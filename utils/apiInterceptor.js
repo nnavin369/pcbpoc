@@ -2,7 +2,7 @@
 
 /**
  * ============================================================================
- * apiInterceptor.js — Network Response Interceptor & Status Code Validator
+ * apiInterceptor.js — Network Response Interceptor & API Payload Validator
  * ============================================================================
  *
  * 📖 WHAT IS THIS FILE?
@@ -10,8 +10,9 @@
  *   hidden background network requests (called API / XHR / Fetch calls) to get
  *   data from the backend server.
  *
- *   This helper acts like a "listener" that watches all those background calls
- *   and checks if the server answered with `200 OK` or if something crashed (500/401).
+ *   This helper acts like a "listener" that watches all those background calls,
+ *   captures their HTTP status codes, headers, and response JSON payloads,
+ *   and provides validation methods to assert on specific response fields.
  *
  * 💡 JAVASCRIPT & NETWORK CONCEPTS EXPLAINED FOR BEGINNERS:
  *   - `page.on('response', callback)` : Tells Playwright to run a function every time
@@ -22,13 +23,7 @@
  *   - `Status 500`                    : Internal Server Error (Backend crashed).
  *   - `KeepAlive`                     : Automatic background heartbeat ping sent by ASP.NET.
  *                                       We ignore these so they don't cause false alarms.
- *
- * 📋 HOW TO USE THIS IN A TEST:
- *   1. const interceptor = new ApiInterceptor(this.page);
- *   2. interceptor.startCapture();
- *   3. // click a button on the screen...
- *   4. interceptor.stopCapture();
- *   5. const failed = interceptor.getFailedResponses(); // should be 0
+ *   - `response.text() / json()`      : Reads the actual data payload returned by the server.
  * ============================================================================
  */
 
@@ -42,9 +37,10 @@ class ApiInterceptor {
    */
   constructor(page) {
     this.page = page;
-    this._responses = [];   // List where all captured network responses are stored
-    this._listener = null;   // The active callback function
-    this._isCapturing = false; // Flag to indicate if we are currently listening
+    this._responses = [];      // List where all captured network responses are stored
+    this._listener = null;      // The active callback function
+    this._isCapturing = false;    // Flag to indicate if we are currently listening
+    this._pendingBodyReads = []; // Promises for async body reading
   }
 
   /**
@@ -53,11 +49,12 @@ class ApiInterceptor {
    * --------------------------------------------------------------------------
    * WHAT IT DOES:
    *   Starts recording all background API calls made by the browser.
-   *   Filters out static files (like images, fonts, CSS) and only keeps
-   *   actual data API calls (`xhr` and `fetch`).
+   *   Filters out static files (like images, fonts, CSS) and records
+   *   the URL, status code, HTTP method, and response body payload.
    */
   startCapture() {
     this._responses = [];
+    this._pendingBodyReads = [];
     this._isCapturing = true;
 
     // Define the listener callback function
@@ -67,15 +64,37 @@ class ApiInterceptor {
       const request = response.request();
       const resourceType = request.resourceType();
 
-      // Only save dynamic API calls (XHR / Fetch) — ignore images/CSS/fonts
-      if (resourceType === 'xhr' || resourceType === 'fetch') {
-        this._responses.push({
+      // Only save dynamic API calls (XHR / Fetch) or document navigation — ignore images/CSS/fonts
+      if (resourceType === 'xhr' || resourceType === 'fetch' || request.method() === 'POST') {
+        const item = {
           url: response.url(),
           status: response.status(),
           method: request.method(),
           resourceType: resourceType,
           timestamp: new Date().toISOString(),
-        });
+          body: null,
+          json: null,
+        };
+
+        this._responses.push(item);
+
+        // Asynchronously capture body content without blocking the main event loop
+        const readPromise = response.text()
+          .then((text) => {
+            item.body = text;
+            try {
+              item.json = JSON.parse(text);
+            } catch {
+              // Body is HTML or plain text, not JSON
+              item.json = null;
+            }
+          })
+          .catch(() => {
+            item.body = null;
+            item.json = null;
+          });
+
+        this._pendingBodyReads.push(readPromise);
       }
     };
 
@@ -88,14 +107,17 @@ class ApiInterceptor {
    * FUNCTION: stopCapture()
    * --------------------------------------------------------------------------
    * WHAT IT DOES:
-   *   Stops recording and removes the network listener to free up memory.
+   *   Stops recording and removes the network listener.
+   *   Awaits any pending async response body reading operations.
    */
-  stopCapture() {
+  async stopCapture() {
     this._isCapturing = false;
     if (this._listener) {
       this.page.removeListener('response', this._listener);
       this._listener = null;
     }
+    // Wait for any trailing response body reads to settle
+    await Promise.allSettled(this._pendingBodyReads);
   }
 
   /**
@@ -137,18 +159,61 @@ class ApiInterceptor {
 
   /**
    * --------------------------------------------------------------------------
+   * FUNCTION: findResponses(endpointPattern)
+   * --------------------------------------------------------------------------
+   * WHAT IT DOES:
+   *   Finds all captured responses whose URL contains the specified pattern.
+   *
+   * @param {string} endpointPattern - URL substring (e.g. "/DataApi/Balances" or "Search")
+   * @returns {Array} List of matching response objects
+   */
+  findResponses(endpointPattern) {
+    const cleanPattern = endpointPattern.trim().toLowerCase();
+    return this._responses.filter(r => r.url.toLowerCase().includes(cleanPattern));
+  }
+
+  /**
+   * --------------------------------------------------------------------------
+   * FUNCTION: getResponseJson(endpointPattern)
+   * --------------------------------------------------------------------------
+   * WHAT IT DOES:
+   *   Returns the parsed JSON payload of the first response matching the endpoint pattern.
+   *
+   * @param {string} endpointPattern - URL substring
+   * @returns {Object|null} Parsed JSON object or null if not found/not JSON
+   */
+  getResponseJson(endpointPattern) {
+    const match = this.findResponses(endpointPattern)[0];
+    return match ? match.json : null;
+  }
+
+  /**
+   * --------------------------------------------------------------------------
+   * FUNCTION: getResponseBody(endpointPattern)
+   * --------------------------------------------------------------------------
+   * WHAT IT DOES:
+   *   Returns the raw text body of the first response matching the endpoint pattern.
+   *
+   * @param {string} endpointPattern - URL substring
+   * @returns {string|null} Raw body string or null
+   */
+  getResponseBody(endpointPattern) {
+    const match = this.findResponses(endpointPattern)[0];
+    return match ? match.body : null;
+  }
+
+  /**
+   * --------------------------------------------------------------------------
    * FUNCTION: checkSpecificEndpoint(endpointPattern)
    * --------------------------------------------------------------------------
    * WHAT IT DOES:
-   *   Checks whether a specific target endpoint (e.g. `/DataApi/Balances`)
-   *   was called and whether all calls to that endpoint returned HTTP 200 OK.
+   *   Checks whether a specific target endpoint was called and returned HTTP 200 OK.
    *
    * @param {string} endpointPattern - Example: "/DataApi/Balances"
    * @returns {Object} { matched: boolean, count: number, all200: boolean, details: Array }
    */
   checkSpecificEndpoint(endpointPattern) {
-    const cleanPattern = endpointPattern.trim().toLowerCase();
-    const matches = this._responses.filter(r => r.url.toLowerCase().includes(cleanPattern));
+    const matches = this.findResponses(endpointPattern);
     const all200 = matches.length > 0 && matches.every(r => r.status >= 200 && r.status < 300);
 
     return {
