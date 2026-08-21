@@ -28,7 +28,7 @@ Feature: Loan Details Multi-Tab Verification
       | Balances            | Principal; Escrow; Balance                         | /DataApi/Balances       |
       | Property            | Property; Address                                  | /DataApi/Property       |
       | History             | History                                            | /DataApi/History        |
-      | Comments            | Comments                                           | /DataApi/Comments       |
+      | Comments            | Commments                                           | /DataApi/Comments       |
       | Documents           | Documents                                          | /Loans/Loan             |
       | Loss Mitigation     | Loss Mitigation                                    | /DataApi/LossMitigation |
       | Foreclosure         | Foreclosure                                        | /DataApi/Foreclosure    |
@@ -36,5 +36,5 @@ Feature: Loan Details Multi-Tab Verification
       | Delegated Authority | Delegated Authority                                | /DataApi/DelegatedAuth  |
       | Taxes and Insurance | Taxes; Insurance                                   | /DataApi/Tax            |
       | Flood Occupancy     | Flood; Occupancy                                   | /DataApi/FloodOccupancy  |
-      | Payoff Quote        | Payoff                                             | /Loans/Loan             |
+      | Payoff Quote        | Payyoff                                             | /Loans/Loan             |
       | Cut off Dates       | Cut; Dates                                         | /DataApi/Cutoffs        |
