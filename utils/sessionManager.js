@@ -107,10 +107,13 @@ const SessionManager = {
       const browser = await this.launchBrowser();
       session.context = await browser.newContext({
         viewport:    ENV.browser.viewport,
-        recordVideo: { dir: ENV.video.dir }
+        recordVideo: {
+          dir:  ENV.video.dir,
+          size: ENV.video.size
+        }
       });
       session.page    = await session.context.newPage();
-      logger.info(`[Worker ${getWorkerId()}] Shared browser page created (video recording active)`);
+      logger.info(`[Worker ${getWorkerId()}] Shared browser page created (HD 1080p video recording active)`);
     }
     return session.page;
   },
@@ -146,10 +149,13 @@ const SessionManager = {
     const browser = await this.launchBrowser();
     const ctx = await browser.newContext({
       viewport:    ENV.browser.viewport,
-      recordVideo: { dir: ENV.video.dir }
+      recordVideo: {
+        dir:  ENV.video.dir,
+        size: ENV.video.size
+      }
     });
     const page = await ctx.newPage();
-    logger.info(`[Worker ${getWorkerId()}] Isolated page created for login test (video recording active)`);
+    logger.info(`[Worker ${getWorkerId()}] Isolated page created for login test (HD 1080p video recording active)`);
     return { page, context: ctx };
   },
 
