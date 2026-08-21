@@ -26,9 +26,21 @@
  *     but be careful — too many workers can slow down a slow app
  */
 
+// Ordered feature files according to business flow:
+// 1.) User Authentication (login.feature)
+// 2.) Loan Search on Dashboard (loanSearch.feature)
+// 3.) Loan Details Multi-Tab Verification (loanDetailsTabs.feature)
+// 4.) Loan Search API Response Validation (loanSearchApiValidation.feature)
+const orderedFeatureFiles = [
+  'features/login.feature',
+  'features/loanSearch.feature',
+  'features/loanDetailsTabs.feature',
+  'features/loanSearchApiValidation.feature'
+];
+
 // Common options shared between both profiles
 const commonOptions = [
-  'features/**/*.feature',            // find all .feature files
+  ...orderedFeatureFiles,              // explicit execution order 1 -> 2 -> 3 -> 4
   '--require support/world.js',        // load browser session + page objects
   '--require support/hooks.js',        // load before/after hooks
   '--require steps/loginSteps.js',     // load login step definitions
