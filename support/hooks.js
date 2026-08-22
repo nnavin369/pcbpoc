@@ -122,10 +122,14 @@ After(async function (scenario) {
       video = this.page.video();
     }
 
-    // 3. Close the page / context to trigger Playwright to flush and write the .webm file to disk
+    // 3. Session Teardown:
+    // - For @login (isolated context): always close the isolated page & context.
+    // - For @dashboard & shared sessions:
+    //   * If FAILED: close the page to flush the failure video and reset shared session for auto-recovery.
+    //   * If PASSED: KEEP the shared page and session OPEN! Do NOT close and do NOT logout.
     if (this._isolatedContext) {
       await this.teardown();
-    } else {
+    } else if (isFailed) {
       if (this.page && !this.page.isClosed()) {
         await this.page.close().catch(() => {});
       }
@@ -133,23 +137,13 @@ After(async function (scenario) {
       SessionManager.resetSharedSession();
     }
 
-    // 4. Video Handling: Attach video to Allure ONLY for failed scenarios; delete on success
-    if (video) {
+    // 4. Video Handling: Attach video to Allure ONLY for failed scenarios
+    if (isFailed && video) {
       const videoPath = await video.path().catch(() => null);
       if (videoPath && fs.existsSync(videoPath)) {
-        if (isFailed) {
-          const videoBuffer = fs.readFileSync(videoPath);
-          await this.attach(videoBuffer, 'video/webm');
-          logger.info(`🎬 Video recording attached to Allure report for FAILED scenario: ${videoPath}`);
-        } else {
-          // Delete temporary video file for passing scenarios to keep report clean & save disk space
-          try {
-            fs.unlinkSync(videoPath);
-            logger.info(`🗑️ Video deleted for PASSED scenario (not attached to report)`);
-          } catch {
-            // Ignore cleanup error
-          }
-        }
+        const videoBuffer = fs.readFileSync(videoPath);
+        await this.attach(videoBuffer, 'video/webm');
+        logger.info(`🎬 Video recording attached to Allure report for FAILED scenario: ${videoPath}`);
       }
     }
   } catch (err) {

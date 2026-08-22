@@ -46,6 +46,7 @@
     "test:loantabs": "cucumber-js --profile default --tags @loanTabs",
     "test:api": "cucumber-js --profile default --tags @loanSearchApi",
     "test:ordered": "cucumber-js --profile default",
+    "test:search": "cucumber-js features/loanSearch.feature",
     "test:1:auth": "cucumber-js features/login.feature",
     "test:2:search": "cucumber-js features/loanSearch.feature",
     "test:3:loantabs": "cucumber-js features/loanDetailsTabs.feature",
