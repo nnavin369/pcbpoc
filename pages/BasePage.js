@@ -57,12 +57,15 @@ class BasePage {
   /**
    * Types a value into an input field.
    * Waits for the field to be visible before typing.
+   * Automatically masks sensitive values (passwords/tokens) in logs.
    *
    * @param {string} selector - CSS selector of the input field
    * @param {string} value    - text to type into the field
    */
   async fill(selector, value) {
-    logger.step(`Filling "${selector}" with "${value}"`);
+    const isSensitive = /pass|pwd|secret|token|pin/i.test(selector);
+    const displayVal = isSensitive ? '********' : value;
+    logger.step(`Filling "${selector}" with "${displayVal}"`);
     await this.page.locator(selector).waitFor({ state: 'visible', timeout: ENV.timeouts.element });
     await this.page.locator(selector).fill(value);
   }
