@@ -44,19 +44,12 @@ class DashboardPage extends BasePage {
    */
   async navigateToDashboard() {
     logger.step('Navigating to dashboard');
+
     const currentUrl = this.page.url();
-    if (currentUrl.includes('/DataApi/Dashboard')) {
-      logger.info('Already on Dashboard page — preserving active session');
-      await this.page.waitForSelector(SELECTORS.searchDropdown, { state: 'visible', timeout: 30000 }).catch(() => {});
-      return;
+    if (!currentUrl.includes('/DataApi/Dashboard') && !currentUrl.includes('/Account/Login')) {
+      await this.page.goto(`${ENV.baseUrl}/DataApi/Dashboard`, { waitUntil: 'domcontentloaded', timeout: 60000 });
+      await this.page.waitForTimeout(400);
     }
-    await this.page.goto(
-      `${ENV.baseUrl}/DataApi/Dashboard`,
-      { waitUntil: 'domcontentloaded', timeout: 120000 }
-    );
-    await this.page.waitForLoadState('networkidle', { timeout: 60000 }).catch(() => {
-      logger.warn('networkidle timed out — continuing anyway');
-    });
 
     // Auto-recover if redirected to login page due to server session expiry
     if (this.page.url().includes('/Account/Login') || this.page.url().includes('/Login')) {
