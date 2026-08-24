@@ -41,7 +41,7 @@ setDefaultTimeout(ENV.timeouts.default);
  *
  * Timeout is set to 180s because login can take 60-90 seconds on this app.
  */
-BeforeAll({ timeout: 180000 }, async function () {
+BeforeAll({ timeout: 240000 }, async function () {
   const page = await SessionManager.getSharedPage();
   const loginPage = new LoginPage(page);
   await SessionManager.loginOnce(loginPage);

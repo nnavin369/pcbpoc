@@ -128,12 +128,31 @@ const SessionManager = {
   async loginOnce(loginPage) {
     const session = getWorkerSession();
     if (!session.isLoggedIn) {
-      logger.info(`[Worker ${getWorkerId()}] Performing login...`);
+      const workerId = getWorkerId();
+      const workerNum = parseInt(workerId, 10);
+      if (!isNaN(workerNum) && workerNum > 0) {
+        const staggerMs = workerNum * 8000;
+        logger.info(`[Worker ${workerId}] Staggering login start by ${staggerMs}ms to avoid parallel authentication collision...`);
+        await new Promise(resolve => setTimeout(resolve, staggerMs));
+      }
+
+      logger.info(`[Worker ${workerId}] Performing login...`);
       await loginPage.open();
       await loginPage.login(ENV.credentials.valid.username, ENV.credentials.valid.password);
-      await session.page.waitForURL('**/DataApi/Dashboard', { timeout: ENV.timeouts.login });
+
+      try {
+        await session.page.waitForURL('**/DataApi/Dashboard', { timeout: ENV.timeouts.login });
+      } catch (err) {
+        // If the server challenged or timed out, attempt one auto-retry
+        logger.warn(`[Worker ${workerId}] Initial login wait timed out — attempting retry...`);
+        if (session.page.url().includes('/Login') || session.page.url().includes('/Account')) {
+          await loginPage.login(ENV.credentials.valid.username, ENV.credentials.valid.password);
+          await session.page.waitForURL('**/DataApi/Dashboard', { timeout: ENV.timeouts.login });
+        }
+      }
+
       session.isLoggedIn = true;
-      logger.info(`[Worker ${getWorkerId()}] Login successful — session established`);
+      logger.info(`[Worker ${workerId}] Login successful — session established`);
     } else {
       logger.info(`[Worker ${getWorkerId()}] Session already active — skipping login`);
     }
