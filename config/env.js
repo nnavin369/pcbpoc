@@ -51,6 +51,24 @@ const ENV = {
     }
   },
 
+  /**
+   * Resolves credentials for a specific parallel worker ID.
+   * If PARALLEL_USER_<id> and PARALLEL_PASS_<id> are defined in .env, uses them.
+   * Otherwise falls back to default VALID_USERNAME / VALID_PASSWORD.
+   *
+   * @param {string|number} workerId - Parallel worker index (0, 1, 2, etc.)
+   * @returns {{ username: string, password: string }}
+   */
+  getCredentialsForWorker(workerId = '0') {
+    const id = String(workerId);
+    const workerUser = process.env[`PARALLEL_USER_${id}`];
+    const workerPass = process.env[`PARALLEL_PASS_${id}`];
+    if (workerUser && workerPass) {
+      return { username: workerUser, password: workerPass };
+    }
+    return this.credentials.valid;
+  },
+
   browser: {
     // Convert string 'true'/'false' from .env to actual boolean
     headless: process.env.BROWSER_HEADLESS === 'true',

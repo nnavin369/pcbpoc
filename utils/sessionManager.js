@@ -136,9 +136,10 @@ const SessionManager = {
         await new Promise(resolve => setTimeout(resolve, staggerMs));
       }
 
-      logger.info(`[Worker ${workerId}] Performing login...`);
+      const creds = ENV.getCredentialsForWorker(workerId);
+      logger.info(`[Worker ${workerId}] Performing login with user: "${creds.username}"...`);
       await loginPage.open();
-      await loginPage.login(ENV.credentials.valid.username, ENV.credentials.valid.password);
+      await loginPage.login(creds.username, creds.password);
 
       try {
         await session.page.waitForURL('**/DataApi/Dashboard', { timeout: ENV.timeouts.login });
@@ -146,7 +147,7 @@ const SessionManager = {
         // If the server challenged or timed out, attempt one auto-retry
         logger.warn(`[Worker ${workerId}] Initial login wait timed out — attempting retry...`);
         if (session.page.url().includes('/Login') || session.page.url().includes('/Account')) {
-          await loginPage.login(ENV.credentials.valid.username, ENV.credentials.valid.password);
+          await loginPage.login(creds.username, creds.password);
           await session.page.waitForURL('**/DataApi/Dashboard', { timeout: ENV.timeouts.login });
         }
       }
