@@ -11,7 +11,7 @@
 #   @loanTabs  → target tag for loan tabs verification suite
 # =============================================================================
 
-@dashboard @loanTabs
+@loanTabs @loanDetails
 Feature: Loan Details Multi-Tab Verification
   As a mortgage servicing analyst
   I want to search for a specific Loan ID and navigate through all tabs

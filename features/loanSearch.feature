@@ -21,7 +21,7 @@
 #   npm run test:loansearch
 # =============================================================================
 
-@dashboard
+@dashboard @loanSearch
 Feature: Loan Search on Dashboard
   As a logged-in user
   I want to search loans by each search type
