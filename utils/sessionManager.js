@@ -196,23 +196,33 @@ const SessionManager = {
   },
 
   /**
-   * Closes the browser for the current worker and cleans up stored session references.
-   * Called during AfterAll hook execution.
+   * Closes all active browser instances, contexts, and pages across all workers.
+   * Called during AfterAll hook execution to ensure zero lingering windows.
    *
    * @returns {Promise<void>}
    */
   async closeBrowser() {
-    const session = getWorkerSession();
-    if (session.browser) {
-      await session.browser.close();
-      logger.info(`[Worker ${getWorkerId()}] Browser closed`);
-      workerSessions.set(getWorkerId(), {
-        browser:    null,
-        context:    null,
-        page:       null,
-        isLoggedIn: false
-      });
+    for (const [id, session] of workerSessions.entries()) {
+      try {
+        if (session.page && !session.page.isClosed()) {
+          await session.page.close().catch(() => {});
+        }
+        if (session.context) {
+          await session.context.close().catch(() => {});
+        }
+        if (session.browser) {
+          await session.browser.close().catch(() => {});
+          logger.info(`[Worker ${id}] Browser successfully closed`);
+        }
+      } catch (err) {
+        logger.warn(`Error closing browser for worker ${id}: ${err.message}`);
+      }
+      session.browser    = null;
+      session.context    = null;
+      session.page       = null;
+      session.isLoggedIn = false;
     }
+    workerSessions.clear();
   }
 };
 

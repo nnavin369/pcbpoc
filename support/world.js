@@ -36,15 +36,10 @@ setDefaultTimeout(ENV.timeouts.default);
 
 /**
  * BeforeAll — runs ONCE before any scenario starts.
- * Launches the browser, creates the shared page, and logs in.
- * All @dashboard scenarios will reuse this logged-in session.
- *
- * Timeout is set to 180s because login can take 60-90 seconds on this app.
+ * Framework initialization (browser is launched on-demand when the first scenario starts).
  */
-BeforeAll({ timeout: 240000 }, async function () {
-  const page = await SessionManager.getSharedPage();
-  const loginPage = new LoginPage(page);
-  await SessionManager.loginOnce(loginPage);
+BeforeAll(async function () {
+  // Browser instance is initialized on-demand to prevent duplicate initial windows
 });
 
 /**
@@ -76,16 +71,21 @@ class CustomWorld extends World {
     const isLoginTest = tags.some(t => t.includes('@login'));
 
     if (isLoginTest) {
-      // Login tests need a fresh browser context — no pre-existing session
+      // Login tests need a fresh isolated browser context — 1 single window
       const { page, context } = await SessionManager.newIsolatedPage();
       this.page = page;
       this._isolatedContext = context; // saved so we can close it in teardown()
     } else {
-      // Dashboard and other tests reuse the shared logged-in session
+      // Dashboard, Loan Tabs, and API tests reuse the shared single browser window
       this.page = await SessionManager.getSharedPage();
+      this.loginPage = new LoginPage(this.page);
+      this.dashboardPage = new DashboardPage(this.page);
+      this.loanDetailsPage = new LoanDetailsPage(this.page);
+      await SessionManager.loginOnce(this.loginPage);
+      return;
     }
 
-    // Wire up page objects so steps can use this.loginPage, this.dashboardPage, and this.loanDetailsPage
+    // Wire up page objects for login tests
     this.loginPage = new LoginPage(this.page);
     this.dashboardPage = new DashboardPage(this.page);
     this.loanDetailsPage = new LoanDetailsPage(this.page);
