@@ -92,7 +92,10 @@ const ENV = {
     login:      parseInt(process.env.TIMEOUT_LOGIN)      || 120000,
     element:    parseInt(process.env.TIMEOUT_ELEMENT)    || 15000,
     navigation: parseInt(process.env.TIMEOUT_NAVIGATION) || 120000
-  }
+  },
+
+  // Clear observable pause (in milliseconds) between each test scenario for demo & visibility
+  scenarioDelay: parseInt(process.env.SCENARIO_DELAY_MS) || 2500
 };
 
 module.exports = ENV;

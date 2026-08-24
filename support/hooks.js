@@ -146,6 +146,11 @@ After(async function (scenario) {
         logger.info(`🎬 Video recording attached to Allure report for FAILED scenario: ${videoPath}`);
       }
     }
+
+    // 5. Clear observable pause between scenarios so viewer/demo audience can clearly see final state
+    if (this.page && !this.page.isClosed()) {
+      await this.page.waitForTimeout(ENV.scenarioDelay);
+    }
   } catch (err) {
     logger.warn(`After hook warning: ${err.message}`);
     await this.teardown().catch(() => {});
