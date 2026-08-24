@@ -45,10 +45,17 @@ class DashboardPage extends BasePage {
   async navigateToDashboard() {
     logger.step('Navigating to dashboard');
 
+    // Fast path: if the search bar is already visible and session is alive, reuse instantly
+    const isAlreadyReady = await this.page.locator(SELECTORS.searchDropdown).first().isVisible().catch(() => false);
     const currentUrl = this.page.url();
-    if (!currentUrl.includes('/DataApi/Dashboard') && !currentUrl.includes('/Account/Login')) {
+    if (isAlreadyReady && !currentUrl.includes('/Login') && !currentUrl.includes('/Account')) {
+      logger.info('Already on Dashboard — reusing active session');
+      return;
+    }
+
+    // Navigate to dashboard if not already there
+    if (!currentUrl.includes('/DataApi/Dashboard')) {
       await this.page.goto(`${ENV.baseUrl}/DataApi/Dashboard`, { waitUntil: 'domcontentloaded', timeout: 60000 });
-      await this.page.waitForTimeout(400);
     }
 
     // Auto-recover if redirected to login page due to server session expiry
@@ -83,8 +90,8 @@ class DashboardPage extends BasePage {
     await this.page.waitForTimeout(500);
 
     // Step 2: Select the radio button for the requested filter type
-    await this.page.locator(SELECTORS.searchRadio(type)).click();
-    await this.page.waitForTimeout(500);
+    await this.page.locator(SELECTORS.searchRadio(type)).click({ force: true });
+    await this.page.waitForTimeout(400);
 
     // Step 3: Populate the input field while the dropdown remains open
     logger.step(`Filling search input [${type}] with: "${value}"`);
@@ -104,11 +111,11 @@ class DashboardPage extends BasePage {
   async fillNameSearch(firstName, lastName) {
     // Step 1: Open search dropdown
     await this.click(SELECTORS.searchDropdown);
-    await this.page.waitForTimeout(500);
+    await this.page.waitForTimeout(400);
 
     // Step 2: Select 'Name' radio option
-    await this.page.locator(SELECTORS.searchRadio('name')).click();
-    await this.page.waitForTimeout(500);
+    await this.page.locator(SELECTORS.searchRadio('name')).click({ force: true });
+    await this.page.waitForTimeout(400);
 
     // Step 3: Populate First Name input
     logger.step(`Filling first name: "${firstName}"`);

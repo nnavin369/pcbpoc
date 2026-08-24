@@ -157,8 +157,8 @@ class LoanDetailsPage extends BasePage {
     // Step 4: Dismiss loading spinner if active
     await this.page.waitForSelector(SELECTORS.loadingMask, { state: 'hidden', timeout: 5000 }).catch(() => {});
 
-    // Step 5: Stay on the tab for 6 seconds for visual inspection
-    await this.page.waitForTimeout(6000);
+    // Step 5: Brief pause for visual inspection
+    await this.page.waitForTimeout(1500);
 
     logger.step(`Tab "${tabName}" clicked and loaded`);
   }
@@ -224,20 +224,24 @@ class LoanDetailsPage extends BasePage {
    * @param {string} tabName - The tab text to click
    */
   async _clickHeaderTab(tabName) {
+    // Dismiss any open search dropdown or popups
+    await this.page.keyboard.press('Escape').catch(() => {});
+
     // List of locator search strategies to try in order
     const strategies = [
       this.page.locator(`a`).filter({ hasText: new RegExp(`^${this._escapeRegex(tabName)}$`, 'i') }).first(),
       this.page.locator(`a:has-text("${tabName}")`).first(),
+      this.page.locator(`li:has-text("${tabName}") a`).first(),
       this.page.locator(`a:has-text("${tabName.split(' ')[0]}")`).first(),
     ];
 
     for (const locator of strategies) {
       try {
-        if (await locator.isVisible({ timeout: 3000 })) {
+        if (await locator.isVisible({ timeout: 2000 })) {
           const box = await locator.boundingBox();
           // Make sure element is in the top header region (Y < 300px)
           if (box && box.y < 300) {
-            await locator.click();
+            await locator.click({ force: true });
             logger.info(`Clicked header tab "${tabName}" (y=${Math.round(box.y)})`);
             return;
           }
@@ -275,6 +279,9 @@ class LoanDetailsPage extends BasePage {
   async _clickMoreDropdownTab(tabName) {
     logger.info(`Tab "${tabName}" is under the "More" dropdown — opening "More" menu`);
 
+    // Dismiss any open search dropdown
+    await this.page.keyboard.press('Escape').catch(() => {});
+
     const cleanName = tabName.trim().toLowerCase();
 
     // Step 1: Open the "More" dropdown menu
@@ -284,9 +291,9 @@ class LoanDetailsPage extends BasePage {
     // Check if dropdown is already open; if not, click it
     const isMenuOpen = await this.page.locator('.dropdown-menu.show, .dropdown-menu:visible').isVisible().catch(() => false);
     if (!isMenuOpen) {
-      await moreBtn.click();
+      await moreBtn.click({ force: true });
       logger.info('"More" dropdown clicked — menu expanded');
-      await this.page.waitForTimeout(600);
+      await this.page.waitForTimeout(400);
     }
 
     // Step 2: Define specific, exact locators for each submenu item
@@ -330,17 +337,10 @@ class LoanDetailsPage extends BasePage {
     for (const locator of menuSelectors) {
       try {
         if (await locator.isVisible({ timeout: 2000 })) {
-          // Hover on the menu item so it is visibly highlighted on screen and in video
-          await locator.hover();
-          await this.page.waitForTimeout(400);
+          await locator.hover().catch(() => {});
+          await this.page.waitForTimeout(200);
 
-          // Apply visual highlight border/background for clarity
-          await locator.evaluate((el) => {
-            el.style.outline = '2px solid #007bff';
-            el.style.backgroundColor = '#e8f0fe';
-          }).catch(() => {});
-
-          await locator.click();
+          await locator.click({ force: true });
           logger.info(`✔ Clicked and activated "${tabName}" inside "More" dropdown`);
           clicked = true;
           break;
@@ -357,7 +357,7 @@ class LoanDetailsPage extends BasePage {
       await fallbackItem.click({ force: true });
     }
 
-    await this.page.waitForTimeout(500);
+    await this.page.waitForTimeout(400);
   }
 
   /**
@@ -402,13 +402,13 @@ class LoanDetailsPage extends BasePage {
     await this.page.goto(`${ENV.baseUrl}/DataApi/Dashboard`, { waitUntil: 'domcontentloaded', timeout: 60000 });
     const searchDropdown = this.page.locator('.search-by .dropdown-toggle').first();
     await searchDropdown.waitFor({ state: 'visible', timeout: 30000 });
-    await searchDropdown.click();
-    await this.page.waitForTimeout(500);
-    await this.page.locator('#loanid').click();
-    await this.page.waitForTimeout(500);
+    await searchDropdown.click({ force: true });
+    await this.page.waitForTimeout(400);
+    await this.page.locator('#loanid').click({ force: true });
+    await this.page.waitForTimeout(400);
     const searchInput = this.page.locator('.search-by input[type="text"]').first();
     await searchInput.fill(loanId);
-    await this.page.locator('.input-group-append').first().click();
+    await this.page.locator('.input-group-append').first().click({ force: true });
     await this.page.waitForLoadState('domcontentloaded', { timeout: 60000 });
     await this.page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
   }

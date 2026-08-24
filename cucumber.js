@@ -38,36 +38,79 @@ const orderedFeatureFiles = [
   'features/loanSearchApiValidation.feature'
 ];
 
-// Common options shared between both profiles
-const commonOptions = [
-  ...orderedFeatureFiles,              // explicit execution order 1 -> 2 -> 3 -> 4
-  '--require support/world.js',        // load browser session + page objects
-  '--require support/hooks.js',        // load before/after hooks
-  '--require steps/loginSteps.js',     // load login step definitions
-  '--require steps/dashboardSteps.js', // load loan search step definitions
-  '--require steps/loanDetailsSteps.js', // load multi-tab loan details step definitions
-  '--require steps/apiValidationSteps.js', // load API validation step definitions
-  '--format progress',                 // show progress dots in terminal
-  '--format ./support/allureReporter.js', // generate allure report data
-  '--publish-quiet'                    // suppress cucumber.io publish message
+// Common support/step requires (shared across all profiles)
+const commonRequires = [
+  '--require support/world.js',
+  '--require support/hooks.js',
+  '--require steps/loginSteps.js',
+  '--require steps/dashboardSteps.js',
+  '--require steps/loanDetailsSteps.js',
+  '--require steps/apiValidationSteps.js',
+  '--format progress',
+  '--format ./support/allureReporter.js',
+  '--publish-quiet'
 ];
 
 module.exports = {
 
   /**
-   * DEFAULT profile — Sequential execution (one scenario at a time)
-   * Use this for: debugging, first-time runs, investigating failures
+   * DEFAULT profile — Sequential execution of ALL 4 feature files in order
    * Run with: npm test
    */
-  default: [...commonOptions].join(' '),
+  default: [
+    'features/login.feature',
+    'features/loanSearch.feature',
+    'features/loanDetailsTabs.feature',
+    'features/loanSearchApiValidation.feature',
+    ...commonRequires
+  ].join(' '),
 
   /**
-   * PARALLEL profile — Runs 3 scenarios simultaneously
-   * Use this for: faster full suite execution, CI/CD pipelines
-   * Run with: npm run test:parallel
-   *
-   * '--parallel 3' → spawns 3 worker processes
-   * Each worker gets its own browser and logged-in session
+   * LOANTABS profile — Runs ONLY the 14-tab loan details test
+   * Run with: npm run test:loantabs
    */
-  parallel: [...commonOptions, '--parallel 3'].join(' ')
+  loantabs: [
+    'features/loanDetailsTabs.feature',
+    ...commonRequires
+  ].join(' '),
+
+  /**
+   * API profile — Runs ONLY the API response validation test
+   * Run with: npm run test:api
+   */
+  api: [
+    'features/loanSearchApiValidation.feature',
+    ...commonRequires
+  ].join(' '),
+
+  /**
+   * SEARCH profile — Runs ONLY the loan search dashboard tests
+   * Run with: npm run test:2:search
+   */
+  search: [
+    'features/loanSearch.feature',
+    ...commonRequires
+  ].join(' '),
+
+  /**
+   * AUTH profile — Runs ONLY the login/auth tests
+   * Run with: npm run test:1:auth
+   */
+  auth: [
+    'features/login.feature',
+    ...commonRequires
+  ].join(' '),
+
+  /**
+   * PARALLEL profile — Runs all 4 features with 3 workers simultaneously
+   * Run with: npm run test:parallel
+   */
+  parallel: [
+    'features/login.feature',
+    'features/loanSearch.feature',
+    'features/loanDetailsTabs.feature',
+    'features/loanSearchApiValidation.feature',
+    ...commonRequires,
+    '--parallel 3'
+  ].join(' ')
 };

@@ -36,10 +36,13 @@ setDefaultTimeout(ENV.timeouts.default);
 
 /**
  * BeforeAll — runs ONCE before any scenario starts.
- * Framework initialization (browser is launched on-demand when the first scenario starts).
+ * Pre-warms the shared browser session and logs in once.
+ * All @dashboard, @loanTabs, @api scenarios reuse this session.
  */
-BeforeAll(async function () {
-  // Browser instance is initialized on-demand to prevent duplicate initial windows
+BeforeAll({ timeout: 240000 }, async function () {
+  const page = await SessionManager.getSharedPage();
+  const loginPage = new LoginPage(page);
+  await SessionManager.loginOnce(loginPage);
 });
 
 /**
@@ -63,9 +66,7 @@ class CustomWorld extends World {
 
   /**
    * Called in the Before hook before each scenario.
-   * Assigns the correct page based on the scenario's tags.
-   *
-   * @param {string[]} tags - array of tags on the current scenario (e.g. ['@login', '@smoke'])
+   * @param {string[]} tags - array of tags on the current scenario
    */
   async init(tags = []) {
     const isLoginTest = tags.some(t => t.includes('@login'));
@@ -74,19 +75,14 @@ class CustomWorld extends World {
       // Login tests need a fresh isolated browser context — 1 single window
       const { page, context } = await SessionManager.newIsolatedPage();
       this.page = page;
-      this._isolatedContext = context; // saved so we can close it in teardown()
+      this._isolatedContext = context;
     } else {
-      // Dashboard, Loan Tabs, and API tests reuse the shared single browser window
+      // All other tests reuse the single shared logged-in session (no re-login)
       this.page = await SessionManager.getSharedPage();
-      this.loginPage = new LoginPage(this.page);
-      this.dashboardPage = new DashboardPage(this.page);
-      this.loanDetailsPage = new LoanDetailsPage(this.page);
-      await SessionManager.loginOnce(this.loginPage);
-      return;
     }
 
-    // Wire up page objects for login tests
-    this.loginPage = new LoginPage(this.page);
+    // Wire up page objects
+    this.loginPage     = new LoginPage(this.page);
     this.dashboardPage = new DashboardPage(this.page);
     this.loanDetailsPage = new LoanDetailsPage(this.page);
   }
