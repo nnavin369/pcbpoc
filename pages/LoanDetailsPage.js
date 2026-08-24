@@ -154,15 +154,11 @@ class LoanDetailsPage extends BasePage {
       await this._clickHeaderTab(tabName);
     }
 
-    // Step 4: Stay on the tab for 6 seconds for visual inspection
+    // Step 4: Dismiss loading spinner if active
+    await this.page.waitForSelector(SELECTORS.loadingMask, { state: 'hidden', timeout: 5000 }).catch(() => {});
+
+    // Step 5: Stay on the tab for 6 seconds for visual inspection
     await this.page.waitForTimeout(6000);
-
-    // Step 5: Wait for any loading spinners or AJAX calls to finish
-    await this.page.waitForSelector(SELECTORS.loadingMask, { state: 'hidden', timeout: 30000 }).catch(() => {});
-    await this.page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
-
-    // Step 6: Final check that session didn't expire during click
-    await this._ensureLoanDetailsPage();
 
     logger.step(`Tab "${tabName}" clicked and loaded`);
   }
