@@ -36,13 +36,10 @@ setDefaultTimeout(ENV.timeouts.default);
 
 /**
  * BeforeAll — runs ONCE before any scenario starts.
- * Pre-warms the shared browser session and logs in once.
- * All @dashboard, @loanTabs, @api scenarios reuse this session.
+ * Lightweight initialization. Browser instance is launched strictly on-demand.
  */
-BeforeAll({ timeout: 240000 }, async function () {
-  const page = await SessionManager.getSharedPage();
-  const loginPage = new LoginPage(page);
-  await SessionManager.loginOnce(loginPage);
+BeforeAll(async function () {
+  // Browser is launched on-demand to prevent ghost/duplicate windows
 });
 
 /**
@@ -60,42 +57,41 @@ AfterAll(async function () {
 class CustomWorld extends World {
   constructor(options) {
     super(options);
-    this.page = null;             // Playwright page — assigned in init()
-    this._isolatedContext = null; // only set for @login tests — closed in teardown()
+    this.page = null; // Playwright page — assigned in init()
   }
 
   /**
    * Called in the Before hook before each scenario.
+   * Reuses the single active browser window to prevent multiple windows opening.
+   *
    * @param {string[]} tags - array of tags on the current scenario
    */
   async init(tags = []) {
     const isLoginTest = tags.some(t => t.includes('@login'));
 
+    // Always use the same single browser window
+    this.page = await SessionManager.getSharedPage();
+
     if (isLoginTest) {
-      // Login tests need a fresh isolated browser context — 1 single window
-      const { page, context } = await SessionManager.newIsolatedPage();
-      this.page = page;
-      this._isolatedContext = context;
+      // Clear cookies so each login scenario starts with a clean, unauthenticated session in the same window
+      await this.page.context().clearCookies();
     } else {
-      // All other tests reuse the single shared logged-in session (no re-login)
-      this.page = await SessionManager.getSharedPage();
+      // For search, loan tabs, and api tests: authenticate once on demand
+      this.loginPage = new LoginPage(this.page);
+      await SessionManager.loginOnce(this.loginPage);
     }
 
     // Wire up page objects
-    this.loginPage     = new LoginPage(this.page);
-    this.dashboardPage = new DashboardPage(this.page);
+    this.loginPage       = new LoginPage(this.page);
+    this.dashboardPage   = new DashboardPage(this.page);
     this.loanDetailsPage = new LoanDetailsPage(this.page);
   }
 
   /**
    * Called in the After hook after each scenario.
-   * Only closes isolated contexts (login tests) — the shared session stays alive.
    */
   async teardown() {
-    if (this._isolatedContext) {
-      await this._isolatedContext.close();
-      this._isolatedContext = null;
-    }
+    // Single page remains open between scenarios for speed and single-window continuity
   }
 }
 
