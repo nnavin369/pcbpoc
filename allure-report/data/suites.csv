@@ -1,0 +1,36 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"As a QA Automation Engineer
+  I want to verify the backend API response status code and JSON response fields
+  when searching for Loan ID 555835905 in the Insight application,
+  including Address, InvestorId, and Borrower 1 & Borrower 2 values,
+  and print the full response payload.","241","Verify API response status, Address, InvestorId, Borrower 1 & 2 details, and print payload","","2026-08-31","failed","2026-08-31","","Verify API response status, Address, InvestorId, Borrower 1 & 2 details, and print payload","",""
+"As a user of Shellpoint Mortgage Servicing
+  I want to log in to the Insight application
+  So that I can access the portal","328","Login fails with empty credentials","","2026-08-31","failed","2026-08-31","","Login fails with empty credentials","",""
+"As a logged-in user
+  I want to search loans by each search type
+  So that I can confirm data is fetched from the application","253","Search by Street returns results","","2026-08-31","failed","2026-08-31","","Search by Street returns results","",""
+"As a logged-in user
+  I want to search loans by each search type
+  So that I can confirm data is fetched from the application","226","Search by Loan ID returns results","","2026-08-31","failed","2026-08-31","","Search by Loan ID returns results","",""
+"As a logged-in user
+  I want to search loans by each search type
+  So that I can confirm data is fetched from the application","232","Search by Name returns results","","2026-08-31","failed","2026-08-31","","Search by Name returns results","",""
+"As a user of Shellpoint Mortgage Servicing
+  I want to log in to the Insight application
+  So that I can access the portal","1763","Successful login with valid credentials","","2026-08-31","failed","2026-08-31","","Successful login with valid credentials","",""
+"As a mortgage servicing analyst
+  I want to search for a specific Loan ID and navigate through all tabs
+  So that I can verify data is correctly populated across all tab panels","227","Verify all 14 loan detail tabs for Loan ID 555835905","","2026-08-31","failed","2026-08-31","","Verify all 14 loan detail tabs for Loan ID 555835905","",""
+"As a logged-in user
+  I want to search loans by each search type
+  So that I can confirm data is fetched from the application","239","Search by Zipcode returns results","","2026-08-31","failed","2026-08-31","","Search by Zipcode returns results","",""
+"As a logged-in user
+  I want to search loans by each search type
+  So that I can confirm data is fetched from the application","234","Search by State returns results","","2026-08-31","failed","2026-08-31","","Search by State returns results","",""
+"As a user of Shellpoint Mortgage Servicing
+  I want to log in to the Insight application
+  So that I can access the portal","322","Login fails with invalid credentials","","2026-08-31","failed","2026-08-31","","Login fails with invalid credentials","",""
+"As a logged-in user
+  I want to search loans by each search type
+  So that I can confirm data is fetched from the application","228","Search by City returns results","","2026-08-31","failed","2026-08-31","","Search by City returns results","",""

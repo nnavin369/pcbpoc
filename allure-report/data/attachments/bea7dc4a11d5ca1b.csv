@@ -1,0 +1,5 @@
+Field / Property,Expected Value,Condition
+Loan ID,555835905,equals
+Endpoint,/Loans/Loan,contains
+HTTP Status,200,equals
+Response Body,NOT_EMPTY,exists
