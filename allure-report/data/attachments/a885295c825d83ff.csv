@@ -1,0 +1,15 @@
+Tab Name,Expected Text,Expected API Endpoint
+Info,Loan; Borrower; Servicer,/Loans/Loan
+Balances,Principal; Escrow; Balance,/DataApi/Balances
+Property,Property; Address,/DataApi/Property
+History,History,/DataApi/History
+Comments,Comments,/DataApi/Comments
+Documents,Documents,/Loans/Loan
+Loss Mitigation,Loss Mitigation,/DataApi/LossMitigation
+Foreclosure,Foreclosure,/DataApi/Foreclosure
+Bankruptcy,Bankruptcy,/DataApi/Bankruptcy
+Delegated Authority,Delegated Authority,/DataApi/DelegatedAuth
+Taxes and Insurance,Taxes; Insurance,/DataApi/Tax
+Flood Occupancy,Flood; Occupancy,/DataApi/FloodOccupancy
+Payoff Quote,Payoff,/Loans/Loan
+Cut off Dates,Cut; Dates,/DataApi/Cutoffs
