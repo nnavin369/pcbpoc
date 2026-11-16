@@ -1,0 +1,11 @@
+JSON Field,Expected Value,Condition
+Address,110 Main Street,contains
+City,Waltham,equals
+State,MA,equals
+Status,Active,equals
+InvestorId,BAC066,equals
+Borrowers[0].FirstName,Thomas R,equals
+Borrowers[0].LastName,Keene,equals
+Borrowers[0].HomePhoneNumber,(781) 893-0717,equals
+Borrowers[1].FirstName,MARIANNE,contains
+Borrowers[1].LastName,KEENE,contains
